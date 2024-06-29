@@ -1,7 +1,6 @@
 #include "main.h"
 
-
-CRGB leds[TOTAL_LEDS];
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(TOTAL_LEDS, DATA_PIN, NEO_GRB + NEO_KHZ800);
 int currentMode = 0;
 unsigned long lastDebounceTime = 0;
 unsigned long debounceDelay = 50;
@@ -9,7 +8,8 @@ bool lastButtonState = HIGH;
 bool buttonState = HIGH;
 
 void setup() {
-  FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, TOTAL_LEDS);
+  strip.begin();
+  strip.show(); // Initialize all pixels to 'off'
   pinMode(BUTTON_PIN, INPUT_PULLUP);
   Serial.begin(115200);
   Serial.println("Setup complete.");
@@ -50,40 +50,41 @@ void loop() {
       singleColorWave();
       break;
     case 2:
-      steadyColor(CRGB::Red);
+      steadyColor(strip.Color(255, 0, 0)); // Red
       break;
     case 3:
-      steadyColor(CRGB::Green);
+      steadyColor(strip.Color(0, 255, 0)); // Green
       break;
     case 4:
-      steadyColor(CRGB::Blue);
+      steadyColor(strip.Color(0, 0, 255)); // Blue
       break;
     case 5:
-      steadyColor(CRGB::Yellow);
+      steadyColor(strip.Color(255, 255, 0)); // Yellow
       break;
     case 6:
-      steadyColor(CRGB::Cyan);
+      steadyColor(strip.Color(0, 255, 255)); // Cyan
       break;
     case 7:
-      steadyColor(CRGB::Magenta);
+      steadyColor(strip.Color(255, 0, 255)); // Magenta
       break;
     case 8:
-      steadyColor(CRGB::White);
+      steadyColor(strip.Color(255, 255, 255)); // White
       break;
     case 9:
       frenzy();
       break;
   }
 
-  FastLED.show();
+  strip.show();
   delay(100);
 }
 
 void colorWave() {
   static uint8_t hue = 0;
   for (int group = 0; group < NUM_GROUPS; group++) {
+    uint32_t color = strip.ColorHSV(hue * 256 + group * 65536 / NUM_GROUPS);
     for (int i = 0; i < NUM_LEDS_PER_GROUP; i++) {
-      leds[group * NUM_LEDS_PER_GROUP + i] = CHSV(hue + (group * 64), 255, 255);
+      strip.setPixelColor(group * NUM_LEDS_PER_GROUP + i, color);
     }
   }
   hue++;
@@ -91,22 +92,21 @@ void colorWave() {
 
 void singleColorWave() {
   static uint8_t hue = 0;
-  for (int group = 0; group < NUM_GROUPS; group++) {
-    for (int i = 0; i < NUM_LEDS_PER_GROUP; i++) {
-      leds[group * NUM_LEDS_PER_GROUP + i] = CHSV(hue, 255, 255);
-    }
+  uint32_t color = strip.ColorHSV(hue * 256);
+  for (int i = 0; i < TOTAL_LEDS; i++) {
+    strip.setPixelColor(i, color);
   }
   hue++;
 }
 
-void steadyColor(CRGB color) {
+void steadyColor(uint32_t color) {
   for (int i = 0; i < TOTAL_LEDS; i++) {
-    leds[i] = color;
+    strip.setPixelColor(i, color);
   }
 }
 
 void frenzy() {
   for (int i = 0; i < TOTAL_LEDS; i++) {
-    leds[i] = CHSV(random8(), 255, 255);
+    strip.setPixelColor(i, strip.Color(random(255), random(255), random(255)));
   }
 }

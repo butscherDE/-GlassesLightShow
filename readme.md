@@ -1,1 +1,1 @@
-Small programm to let some lights glow for a glass installation.
+Small programm to let some lights glow for a glass installation. 
